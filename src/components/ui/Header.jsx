@@ -1,41 +1,44 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import Icon from '../AppIcon';
+import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import Icon from "../AppIcon";
+import { useCart } from "../../context/CartContext";
 
 const Header = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { cartItems } = useCart();
+  const cartCount = cartItems?.reduce((sum, item) => sum + item.quantity, 0);
 
   const navigationItems = [
     {
-      label: 'Dashboard',
-      path: '/product-assessment-dashboard',
-      icon: 'LayoutDashboard',
+      label: "Dashboard",
+      path: "/product-assessment-dashboard",
+      icon: "LayoutDashboard",
     },
     {
-      label: 'Products',
-      path: '/product-detail-view',
-      icon: 'Package',
+      label: "Products",
+      path: "/product-detail-view",
+      icon: "Package",
     },
     {
-      label: 'Cart',
-      path: '/shopping-cart-management',
-      icon: 'ShoppingCart',
+      label: "Cart",
+      path: "/shopping-cart-management",
+      icon: "ShoppingCart",
     },
     {
-      label: 'Account',
-      path: '/user-authentication',
-      icon: 'User',
+      label: "Account",
+      path: "/user-authentication",
+      icon: "User",
     },
     {
-      label: 'E Book',
-      path: '/e-book',
-      icon: 'Book',
+      label: "E Book",
+      path: "/e-book",
+      icon: "Book",
     },
     {
-      label: 'Library',
-      path: '/library',
-      icon: 'LibraryBig',
+      label: "Library",
+      path: "/library",
+      icon: "LibraryBig",
     },
   ];
 
@@ -49,8 +52,8 @@ const Header = () => {
     <>
       <header className="fixed top-0 left-0 right-0 h-[60px] bg-card shadow-md z-[1000] border-b border-border">
         <div className="h-full flex items-center justify-between px-6">
-          <Link 
-            to="/product-assessment-dashboard" 
+          <Link
+            to="/product-assessment-dashboard"
             className="flex items-center gap-3 transition-opacity duration-250 hover:opacity-80"
           >
             <div className="w-10 h-10 bg-primary/20 rounded-md flex items-center justify-center">
@@ -62,30 +65,47 @@ const Header = () => {
           </Link>
 
           <nav className="hidden md:flex items-center gap-2">
-            {navigationItems?.map((item) => (
-              <Link
-                key={item?.path}
-                to={item?.path}
-                className={`
-                  relative flex items-center gap-2 px-4 py-2 rounded-md
-                  transition-all duration-250 ease-smooth
-                  ${isActivePath(item?.path)
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  }
-                `}
-              >
-                <Icon 
-                  name={item?.icon} 
-                  size={18} 
-                  color={isActivePath(item?.path) ? 'var(--color-primary-foreground)' : 'currentColor'}
-                />
-                <span className="font-medium text-sm">{item?.label}</span>
-                {isActivePath(item?.path) && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
-                )}
-              </Link>
-            ))}
+            {navigationItems?.map((item) => {
+              const isCart = item.path === "/shopping-cart-management";
+
+              return (
+                <Link
+                  key={item?.path}
+                  to={item?.path}
+                  className={`
+                    relative flex items-center gap-2 px-4 py-2 rounded-md
+                    transition-all duration-250 ease-smooth
+                    ${
+                      isActivePath(item?.path)
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }
+                  `}
+                >
+                  <div className="relative">
+                    <Icon
+                      name={item?.icon}
+                      size={18}
+                      color={
+                        isActivePath(item?.path)
+                          ? "var(--color-primary-foreground)"
+                          : "currentColor"
+                      }
+                    />
+                    {isCart && cartCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-error text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                        {cartCount}
+                      </span>
+                    )}
+                  </div>
+
+                  <span className="font-medium text-sm">{item?.label}</span>
+                  {isActivePath(item?.path) && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
           <button
@@ -93,53 +113,55 @@ const Header = () => {
             className="md:hidden p-2 rounded-md text-foreground hover:bg-muted transition-colors duration-250"
             aria-label="Toggle mobile menu"
           >
-            <Icon name={mobileMenuOpen ? 'X' : 'Menu'} size={24} />
+            <Icon name={mobileMenuOpen ? "X" : "Menu"} size={24} />
           </button>
         </div>
       </header>
       {mobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-background z-[1200] md:hidden"
-          style={{ top: '60px' }}
+          style={{ top: "60px" }}
         >
           <nav className="flex flex-col p-6 gap-2">
-            {navigationItems?.map((item) => (
-              <Link
-                key={item?.path}
-                to={item?.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`
-                  flex items-center justify-between px-4 py-3 rounded-md
-                  transition-all duration-250 ease-smooth
-                  ${isActivePath(item?.path)
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  }
-                `}
-              >
-                <div className="flex items-center gap-3">
-                  <Icon 
-                    name={item?.icon} 
-                    size={20} 
-                    color={isActivePath(item?.path) ? 'var(--color-primary-foreground)' : 'currentColor'}
-                  />
-                  <span className="font-medium">{item?.label}</span>
-                </div>
-                {item?.problemCount > 0 && (
-                  <span 
-                    className={`
-                      px-2 py-1 rounded text-xs font-mono
-                      ${isActivePath(item?.path)
-                        ? 'bg-primary-foreground/20 text-primary-foreground'
-                        : 'bg-warning/20 text-warning'
+            {navigationItems?.map((item) => {
+              const isCart = item.path === "/shopping-cart-management";
+
+              return (
+                <Link
+                  key={item?.path}
+                  to={item?.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`
+                    flex items-center justify-between px-4 py-3 rounded-md
+                    transition-all duration-250 ease-smooth
+                    ${
+                      isActivePath(item?.path)
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }
+                  `}
+                >
+                  <div className="flex items-center gap-3 relative">
+                    <Icon
+                      name={item?.icon}
+                      size={20}
+                      color={
+                        isActivePath(item?.path)
+                          ? "var(--color-primary-foreground)"
+                          : "currentColor"
                       }
-                    `}
-                  >
-                    {item?.problemCount} issues
-                  </span>
-                )}
-              </Link>
-            ))}
+                    />
+                    {isCart && cartCount > 0 && (
+                      <span className="absolute -top-2 -right-3 bg-error text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">
+                        {cartCount}
+                      </span>
+                    )}
+
+                    <span className="font-medium">{item?.label}</span>
+                  </div>
+                </Link>
+              );
+            })}
           </nav>
         </div>
       )}

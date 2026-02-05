@@ -1,22 +1,31 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '../../components/ui/Header';
-import PerformanceMonitor from '../../components/ui/PerformanceMonitor';
-import FilterToolbar from './components/FilterToolbar';
-import ProductGrid from './components/ProductGrid';
-import Icon from '../../components/AppIcon';
+import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import Header from "../../components/ui/Header";
+import PerformanceMonitor from "../../components/ui/PerformanceMonitor";
+import FilterToolbar from "./components/FilterToolbar";
+import ProductGrid from "./components/ProductGrid";
+import Icon from "../../components/AppIcon";
 
 const ProductAssessmentDashboard = () => {
   const navigate = useNavigate();
   const [filters, setFilters] = useState({
-    search: '',
-    category: 'all',
+    search: "",
+    category: "all",
     minPrice: null,
-    maxPrice: null
+    maxPrice: null,
   });
   const [productCount, setProductCount] = useState(50);
 
-  const categories = ['electronics', 'clothing', 'home', 'sports', 'books', 'toys', 'beauty', 'automotive'];
+  const categories = [
+    "electronics",
+    "clothing",
+    "home",
+    "sports",
+    "books",
+    "toys",
+    "beauty",
+    "automotive",
+  ];
 
   const products = useMemo(() => {
     return Array.from({ length: productCount }, (_, index) => {
@@ -30,7 +39,7 @@ const ProductAssessmentDashboard = () => {
         "Gaming Mechanical Keyboard",
         "Fitness Tracker Smart Watch",
         "Memory Foam Mattress Queen",
-        "Electric Standing Desk"
+        "Electric Standing Desk",
       ];
 
       const category = categories?.[index % categories?.length];
@@ -46,40 +55,47 @@ const ProductAssessmentDashboard = () => {
         rating,
         isNew: index % 50 === 0,
         image: `https://picsum.photos/seed/${index}/400/600`,
-        imageAlt: `Professional product photography of ${name} in ${category} category with modern studio lighting and clean white background`
+        imageAlt: `Professional product photography of ${name} in ${category} category with modern studio lighting and clean white background`,
       };
     });
   }, [productCount]);
 
   const filteredProducts = useMemo(() => {
-    return products?.filter(product => {
-      const matchesSearch = product?.name?.toLowerCase()?.includes(filters?.search?.toLowerCase());
-      const matchesCategory = filters?.category === 'all' || product?.category === filters?.category;
-      const matchesMinPrice = filters?.minPrice === null || product?.price >= filters?.minPrice;
-      const matchesMaxPrice = filters?.maxPrice === null || product?.price <= filters?.maxPrice;
+    return products?.filter((product) => {
+      const matchesSearch = product?.name
+        ?.toLowerCase()
+        ?.includes(filters?.search?.toLowerCase());
+      const matchesCategory =
+        filters?.category === "all" || product?.category === filters?.category;
+      const matchesMinPrice =
+        filters?.minPrice === null || product?.price >= filters?.minPrice;
+      const matchesMaxPrice =
+        filters?.maxPrice === null || product?.price <= filters?.maxPrice;
 
-      return matchesSearch && matchesCategory && matchesMinPrice && matchesMaxPrice;
+      return (
+        matchesSearch && matchesCategory && matchesMinPrice && matchesMaxPrice
+      );
     });
   }, [products, filters]);
 
   useEffect(() => {
     const handleScroll = () => {
-      console.log('Scroll event triggered');
+      console.log("Scroll event triggered");
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
 
     const interval = setInterval(() => {
-      console.log('Interval running');
+      console.log("Interval running");
     }, 1000);
 
     const timeout = setTimeout(() => {
-      console.log('Timeout executed');
+      console.log("Timeout executed");
     }, 5000);
   }, []);
 
   const handleProductClick = (product) => {
-    navigate('/product-detail-view', { state: { product } });
+    navigate("/product-detail-view", { state: { product } });
   };
 
   const handleFilterChange = (newFilters) => {
@@ -100,7 +116,10 @@ const ProductAssessmentDashboard = () => {
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <label htmlFor="product-count" className="text-sm font-medium text-foreground whitespace-nowrap">
+                <label
+                  htmlFor="product-count"
+                  className="text-sm font-medium text-foreground whitespace-nowrap"
+                >
                   Products:
                 </label>
                 <input
@@ -109,7 +128,11 @@ const ProductAssessmentDashboard = () => {
                   min="1"
                   max="100000"
                   value={productCount}
-                  onChange={(e) => setProductCount(Math.max(1, parseInt(e?.target?.value) || 50))}
+                  onChange={(e) =>
+                    setProductCount(
+                      Math.max(1, parseInt(e?.target?.value) || 50),
+                    )
+                  }
                   className="w-24 px-3 py-2 bg-background border border-border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
@@ -126,6 +149,7 @@ const ProductAssessmentDashboard = () => {
             onFilterChange={handleFilterChange}
             categories={categories}
             totalProducts={products?.length}
+            products={products}
           />
 
           <div className="bg-card border border-border rounded-lg p-4 md:p-6">
@@ -134,7 +158,8 @@ const ProductAssessmentDashboard = () => {
                 Product Catalog
               </h2>
               <span className="text-sm text-muted-foreground">
-                Showing {filteredProducts?.length?.toLocaleString()} of {products?.length?.toLocaleString()}
+                Showing {filteredProducts?.length?.toLocaleString()} of{" "}
+                {products?.length?.toLocaleString()}
               </span>
             </div>
 
@@ -146,7 +171,9 @@ const ProductAssessmentDashboard = () => {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 md:py-16">
                 <Icon name="PackageX" size={48} color="var(--color-muted)" />
-                <p className="text-muted-foreground mt-4">No products found matching your filters</p>
+                <p className="text-muted-foreground mt-4">
+                  No products found matching your filters
+                </p>
               </div>
             )}
           </div>

@@ -1,44 +1,84 @@
-import React, { useState, useEffect } from 'react';
-import Select from '../../../components/ui/Select';
-import Input from '../../../components/ui/Input';
-import Button from '../../../components/ui/Button';
-import Icon from '../../../components/AppIcon';
+import React, { useState, useEffect, useMemo } from "react";
+import Select from "../../../components/ui/Select";
+import Input from "../../../components/ui/Input";
+import Button from "../../../components/ui/Button";
+import Icon from "../../../components/AppIcon";
 
-const FilterToolbar = ({ onFilterChange, categories, totalProducts }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [isControlled, setIsControlled] = useState(true);
+const DEBOUNCE_DELAY = 400;
+
+const FilterToolbar = ({
+  onFilterChange,
+  categories,
+  totalProducts,
+  products,
+}) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsControlled(false);
-    }, 5000);
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, DEBOUNCE_DELAY);
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
   useEffect(() => {
     const filters = {
-      search: searchTerm,
+      search: debouncedSearch,
       category: selectedCategory,
       minPrice: minPrice ? parseFloat(minPrice) : null,
-      maxPrice: maxPrice ? parseFloat(maxPrice) : null
+      maxPrice: maxPrice ? parseFloat(maxPrice) : null,
+    };
+
+    onFilterChange(filters);
+  }, [debouncedSearch, selectedCategory, minPrice, maxPrice, onFilterChange]);
+
+  const suggestions = useMemo(() => {
+    if (!searchTerm) return [];
+    const term = searchTerm.toLowerCase();
+    const safeProducts = products || [];
+    const safeCategories = categories || [];
+    const productNameMatches = safeProducts
+      .filter((p) => p?.name?.toLowerCase().includes(term))
+      .map((p) => p.name);
+    const categoryMatches = safeCategories.filter((cat) =>
+      cat?.toLowerCase().includes(term),
+    );
+
+    const merged = [...new Set([...productNameMatches, ...categoryMatches])];
+
+    return merged.slice(0, 3);
+  }, [searchTerm, products, categories]);
+  const handleSuggestionClick = (suggestion) => {
+    setSearchTerm(suggestion);
+    const filters = {
+      search: suggestion,
+      category: selectedCategory,
+      minPrice: minPrice ? parseFloat(minPrice) : null,
+      maxPrice: maxPrice ? parseFloat(maxPrice) : null,
     };
     onFilterChange(filters);
-  }, [searchTerm, selectedCategory, minPrice, maxPrice, onFilterChange]);
+    setShowSuggestions(false);
+  };
 
   const handleReset = () => {
-    setSearchTerm('');
-    setSelectedCategory('all');
-    setMinPrice('');
-    setMaxPrice('');
+    setSearchTerm("");
+    setSelectedCategory("all");
+    setMinPrice("");
+    setMaxPrice("");
   };
 
   const categoryOptions = [
-    { value: 'all', label: 'All Categories' },
-    ...categories?.map(cat => ({ value: cat, label: cat?.charAt(0)?.toUpperCase() + cat?.slice(1) }))
+    { value: "all", label: "All Categories" },
+    ...categories?.map((cat) => ({
+      value: cat,
+      label: cat?.charAt(0)?.toUpperCase() + cat?.slice(1),
+    })),
   ];
 
   return (
@@ -58,39 +98,56 @@ const FilterToolbar = ({ onFilterChange, categories, totalProducts }) => {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-2">
-          {isControlled ? (
-            <Input
-              type="search"
-              label="Search Products"
-              placeholder="Search by name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e?.target?.value)}
-            />
-          ) : (
-            <Input
-              type="search"
-              label="Search Products"
-              placeholder="Search by name..."
-              defaultValue={searchTerm}
-            />
+        <div className="lg:col-span-2 relative">
+          <Input
+            type="search"
+            label="Search Products"
+            placeholder="Search by name or category..."
+            value={searchTerm}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearchTerm(value);
+              setShowSuggestions(true);
+
+              if (!value) {
+                onFilterChange({
+                  search: "",
+                  category: selectedCategory,
+                  minPrice: minPrice ? parseFloat(minPrice) : null,
+                  maxPrice: maxPrice ? parseFloat(maxPrice) : null,
+                });
+              }
+            }}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute top-full mt-1 w-full bg-card border border-border rounded-md shadow-lg z-50">
+              {suggestions.map((suggestion, index) => (
+                <div
+                  key={index}
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="px-3 py-2 text-sm cursor-pointer hover:bg-muted transition-colors"
+                >
+                  {suggestion}
+                </div>
+              ))}
+            </div>
           )}
         </div>
-
         <Select
           label="Category"
           options={categoryOptions}
           value={selectedCategory}
           onChange={setSelectedCategory}
         />
-
         <div className="flex gap-2">
           <Input
             type="number"
             label="Min Price"
             placeholder="$0"
             value={minPrice}
-            onChange={(e) => setMinPrice(e?.target?.value)}
+            onChange={(e) => setMinPrice(e.target.value)}
             className="flex-1"
           />
           <Input
@@ -98,7 +155,7 @@ const FilterToolbar = ({ onFilterChange, categories, totalProducts }) => {
             label="Max Price"
             placeholder="$999"
             value={maxPrice}
-            onChange={(e) => setMaxPrice(e?.target?.value)}
+            onChange={(e) => setMaxPrice(e.target.value)}
             className="flex-1"
           />
         </div>
